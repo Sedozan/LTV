@@ -1,0 +1,46 @@
+# Pre-explode: deduplicate to one row per policy per month
+pre_explode_counts = (
+    training_df_with
+    .drop_duplicates(subset=["policy_id", "release_day_pol"])
+    .groupby("effective_month")
+    .size()
+    .reset_index(name="count")
+)
+
+fig, axes = plt.subplots(2, 1, figsize=(16, 10))
+
+axes[0].bar(month_counts["effective_month"].astype(str), month_counts["count"])
+axes[0].set_title("Post-Explode (all nt6 rows)")
+axes[0].set_ylabel("Count")
+axes[0].tick_params(axis="x", rotation=90)
+
+axes[1].bar(pre_explode_counts["effective_month"].astype(str), pre_explode_counts["count"])
+axes[1].set_title("Pre-Explode (unique policies)")
+axes[1].set_ylabel("Count")
+axes[1].tick_params(axis="x", rotation=90)
+
+plt.tight_layout()
+plt.show()
+
+
+
+
+# Check for policy_id overlap between training and test
+training_ids = set(training_df_with["policy_id"].unique())
+test_ids = set(df_with["policy_id"].unique())
+
+overlap = training_ids & test_ids
+
+print(f"Training unique policies: {len(training_ids):,}")
+print(f"Test unique policies: {len(test_ids):,}")
+print(f"Overlapping policies: {len(overlap):,}")
+print(f"Overlap as % of test: {len(overlap)/len(test_ids)*100:.2f}%")
+print(f"Overlap as % of training: {len(overlap)/len(training_ids)*100:.2f}%")
+
+[col for col in training_df_with.columns if "pol" in col.lower() or "id" in col.lower()]
+
+sample_ids = list(overlap)[:5]
+print("--- Training ---")
+print(training_df_with[training_df_with["policy_id"].isin(sample_ids)][["policy_id", "nt6", "release_day_pol", "term_ind"]])
+print("--- Test ---")
+print(df_with[df_with["policy_id"].isin(sample_ids)][["policy_id", "nt6", "release_day_pol", "term_ind"]])
