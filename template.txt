@@ -1,35 +1,60 @@
-training_hh = set(training_df_with["household_id"].unique())
-test_hh = set(df_with["household_id"].unique())
+# 1. Check max date in preprocessed source
+source = ph.read_parquet_s3(spark, p.retention_preprocess_train)
+source.agg(F.min("release_day_pol"), F.max("release_day_pol")).show()
 
-hh_overlap = training_hh & test_hh
-
-print(f"Training unique households: {len(training_hh):,}")
-print(f"Test unique households: {len(test_hh):,}")
-print(f"Overlapping households: {len(hh_overlap):,}")
-print(f"Overlap as % of test: {len(hh_overlap)/len(test_hh)*100:.2f}%")
-
-
-
-
-sample_hh = list(hh_overlap)[:5]
-print("--- Training ---")
-print(training_df_with[training_df_with["household_id"].isin(sample_hh)][
-    ["household_id", "policy_id", "nt6", "release_day_pol"]
-].sort_values(["household_id", "policy_id", "nt6"]))
-
-print("--- Test ---")
-print(df_with[df_with["household_id"].isin(sample_hh)][
-    ["household_id", "policy_id", "nt6", "release_day_pol"]
-].sort_values(["household_id", "policy_id", "nt6"]))
+# 2. Unique policy count by month — pre-explode source
+source.withColumn(
+    "effective_month", F.date_format("release_day_pol", "yyyy-MM")
+).groupBy("effective_month").agg(
+    F.countDistinct("policy_id").alias("unique_policies")
+).orderBy("effective_month").show(100, truncate=False)
 
 
-counts = (
-    training_df_with[["policy_id", "effective_month"]]
-    .groupby("effective_month")["policy_id"]
-    .nunique()
-)
-counts.plot(kind="bar", figsize=(16, 6), title="Unique Policies by Effective Month")
-plt.ylabel("Count")
-plt.xticks(rotation=90)
+
+
+# 3. Same for post-explode (retention_training_data) for comparison
+post_explode = ph.read_parquet_s3(spark, training_path_with)
+post_explode.withColumn(
+    "effective_month", F.date_format("release_day_pol", "yyyy-MM")
+).groupBy("effective_month").agg(
+    F.countDistinct("policy_id").alias("unique_policies"),
+    F.count("*").alias("total_rows")
+).orderBy("effective_month").show(100, truncate=False)
+
+
+
+
+# Pre-explode
+pre_explode_df = source.withColumn(
+    "effective_month", F.date_format("release_day_pol", "yyyy-MM")
+).groupBy("effective_month").agg(
+    F.countDistinct("policy_id").alias("unique_policies")
+).orderBy("effective_month").toPandas()
+
+# Post-explode
+post_explode_df = post_explode.withColumn(
+    "effective_month", F.date_format("release_day_pol", "yyyy-MM")
+).groupBy("effective_month").agg(
+    F.countDistinct("policy_id").alias("unique_policies"),
+    F.count("*").alias("total_rows")
+).orderBy("effective_month").toPandas()
+
+fig, axes = plt.subplots(3, 1, figsize=(16, 14))
+
+axes[0].bar(pre_explode_df["effective_month"], pre_explode_df["unique_policies"])
+axes[0].set_title("Pre-Explode: Unique Policies by Month (Source Data)")
+axes[0].set_ylabel("Unique Policies")
+
+axes[1].bar(post_explode_df["effective_month"], post_explode_df["unique_policies"])
+axes[1].set_title("Post-Explode: Unique Policies by Month")
+axes[1].set_ylabel("Unique Policies")
+
+axes[2].bar(post_explode_df["effective_month"], post_explode_df["total_rows"])
+axes[2].set_title("Post-Explode: Total Rows by Month (what you showed yesterday)")
+axes[2].set_ylabel("Total Rows")
+
+for ax in axes:
+    ax.tick_params(axis="x", rotation=90)
+
 plt.tight_layout()
 plt.show()
