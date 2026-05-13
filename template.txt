@@ -1,5 +1,3 @@
-Added a 5-year rolling training window filter after the explode step in spl_pipeline_featurize.py. Placed it post-explode because the explode uses starting_ntr_adw to filter rows, which drops early-date records — putting the date filter before explode would result in an inaccurate cutoff
-Filter out future-dated records (release_day_pol > today) to handle placeholder dates like 2099-02-24
-Added 078 (condo) and 088 (pup) to the SPL line list for B-2760706
-Added ret_ltv_scoring to the clean function's delete list in common_score.py so the featurized scoring data in retention_scoring_data/ gets wiped before re-runs. Previously only the scored output folder was cleaned, so re-running scoring on the same branch left old featurize artifacts alongside new ones
-Hardcoded the preprocessing data path to B-2756198
+On the filter placement, the explode step cross-joins each policy with nt6 values and only keeps rows where nt6 >= starting_ntr_adw. Older policies tend to have higher starting_ntr_adw. If you date-filter before explode, you drop those older policies first, which changes what starting_ntr_adw values are left and makes the cutoff inaccurate. Filtering after explode lets every policy get its full nt6 expansion first, then we cut by date cleanly.
+
+The explode filters on nt6 >= starting_ntr_adw. Older policies have higher starting_ntr_adw, so date-filtering before explode removes them before the cross-join happens, which changes what survives the nt6 filter and throws off the cutoff. After explode keeps the two filters independent. Hope that helps.
