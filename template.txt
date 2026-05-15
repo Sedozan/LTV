@@ -1,3 +1,0 @@
-On the filter placement, the explode step cross-joins each policy with nt6 values and only keeps rows where nt6 >= starting_ntr_adw. Older policies tend to have higher starting_ntr_adw. If you date-filter before explode, you drop those older policies first, which changes what starting_ntr_adw values are left and makes the cutoff inaccurate. Filtering after explode lets every policy get its full nt6 expansion first, then we cut by date cleanly.
-
-The explode filters on nt6 >= starting_ntr_adw. Older policies have higher starting_ntr_adw, so date-filtering before explode removes them before the cross-join happens, which changes what survives the nt6 filter and throws off the cutoff. After explode keeps the two filters independent. Hope that helps.
