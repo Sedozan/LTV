@@ -1,0 +1,31 @@
+# Line 78 — FL excluded vs FL included, same style as the per-line plots
+spec_incl = dict(label="Condo", fit_mode="all", excl_st=())
+
+f_incl_ex  = fit_line(cells_ex,  78, spec_incl, "ex cat")     # == with_fl from above
+f_incl_all = fit_line(cells_all, 78, spec_incl, "with cat")
+
+panels = [
+    ("Line 78 Condo (excl FL)", fits_ex[78],  fits_all[78]),
+    ("Line 78 Condo (incl FL)", f_incl_ex,    f_incl_all),
+]
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), sharey=True)
+for ax, (title, f_ex, f_all) in zip(axes, panels):
+    ax.scatter(f_ex["pts"].NTR, f_ex["pts"].lr_wavg, label="observed ex-cat", zorder=3)
+    ax.plot(ntr, prod_curve(78, ntr), ":",  color="red", label="production")
+    ax.plot(ntr, curve(f_all, ntr),   "--",              label="refit, with cat")
+    ax.plot(ntr, curve(f_ex,  ntr),   "-",               label="refit, ex cat")
+    ax.set_title(f"{title}\nslope={f_ex['slope']:.5f}  intercept={f_ex['intercept']:.5f}")
+    ax.set_xlabel("NTR"); ax.legend(fontsize=7)
+axes[0].set_ylabel("avg loss ratio")
+plt.tight_layout(); plt.show()
+
+
+
+d78 = cells_ex[(cells_ex.ALINE == 78) & (cells_ex.EPREM > 0)]
+p = d78.assign(fl=d78.GEOST.eq(FLORIDA)).groupby(["fl", "NTR"]).EPREM.sum().unstack(0)
+p.columns = ["non_FL", "FL"]
+p["FL_share"] = p["FL"] / (p["FL"] + p["non_FL"])
+display(p.round(4))
+print(f"FL share of condo premium: {p['FL'].sum()/(p['FL'].sum()+p['non_FL'].sum()):.2%}")
+
