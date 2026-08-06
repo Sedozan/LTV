@@ -1,0 +1,6 @@
+keys = ["adw_pol_id", "drv_line", "premium", "loss", "cat", "lr_balance_amt"]
+new = ns.read_parquet_s3_to_pandas(P_SCORED_NEW)[keys]
+old = ns.read_parquet_s3_to_pandas(P_SCORED_PRIOR)[keys]
+m = new.merge(old, on="adw_pol_id", suffixes=("_new", "_old"))
+print(len(new), len(old), len(m))
+(m["premium_new"] - m["premium_old"]).abs().describe()
