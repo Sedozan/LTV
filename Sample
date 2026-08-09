@@ -1,0 +1,46 @@
+FEAT_ROOT = "tmx-smsiweb/specialty-ltv/prod/feature/B-2895893"
+V14_ROOT  = "tmx-smsiweb/specialty-ltv/prod/release/NB_SPL_v1.4.0"
+
+bal_feat = nsh.read_parquet_s3_to_pandas(p.balance_factors)   # feature branch
+bal_v1_4 = nsh.read_parquet_s3_to_pandas(f"{V14_ROOT}/balance/balance_factors.parquet")
+
+assert p.balance_factors.startswith(FEAT_ROOT), p.balance_factors  # confirm p.* is the branch
+
+
+
+
+for name, df in [("feature", bal_feat), ("v1.4.0", bal_v1_4)]:
+    df = round(df, 3)
+    df["calculated_original_lr"] = df["lr_x_cat_target"] - df["bal_factor"]
+    print(name)
+    print(df)
+
+
+
+bal_feat = round(bal_feat, 3)
+bal_feat["calculated_original_lr"] = bal_feat["lr_x_cat_target"] - bal_feat["bal_factor"]
+
+df_agg_for_bal_pd = nsh.read_parquet_s3_to_pandas(p.agg_for_balance)   # feature branch, not v1.4
+assert bal_feat["calculated_original_lr"][0] == round(df_agg_for_bal_pd["lr_non_cat"][0], 3)
+
+
+
+
+# section 5
+
+df_exp_2026 = nsh.read_parquet_s3_to_pandas(p.processed_expense_all)
+df_exp_2026.columns = [
+    col.replace("_e006scl", "").replace("_lifetime", "_service")
+    for col in df_exp_2026.columns
+]
+
+
+internal_feature = ph.read_parquet_s3(spark, p.score_internal_results)
+public_feature = ph.read_parquet_s3(spark, f"{FEAT_ROOT}/ltv_calc/public_results/")
+public_feature = public_feature.join(
+    internal_feature.select(
+        "ply_policy_id", "premium_less_reinsurance", "premium_new", "premium_renew"
+    ),
+    on=[public_feature.adw_pol_id == internal_feature.ply_policy_id],
+)
+public_feature.select("adw_pol_id").show(3)
