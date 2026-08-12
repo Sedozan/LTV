@@ -1,0 +1,9 @@
+BASE = "tmx-smsiweb/classic-specialty-ltv/prod/feature"
+SRC, DST = f"{BASE}/B-2914761/retention", f"{BASE}/B-2937395/retention"
+
+for sub in ["models", "encoders", "labels"]:
+    nsh.copy_folder_scality(
+        source=f"{SRC}/{sub}/",
+        destination=f"{DST}/{sub}/",
+    )
+    print("copied", sub)
