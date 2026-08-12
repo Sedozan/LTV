@@ -7,3 +7,11 @@ for sub in ["models", "encoders", "labels"]:
         destination=f"{DST}/{sub}/",
     )
     print("copied", sub)
+
+
+for sub in ["models", "encoders", "labels",
+            "data/other_short_training_data",
+            "data/other_short_validation_data",
+            "data/other_short_test_data"]:
+    nsh.copy_folder_scality(source=f"{SRC}/{sub}/", destination=f"{DST}/{sub}/")
+
