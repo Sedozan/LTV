@@ -1,0 +1,12 @@
+doit -f classic_spl_ltv/dodo/dodo_retention.py ignore train_other_short_term
+doit -f classic_spl_ltv/dodo/dodo_retention.py ignore generate_ret_monitor_features
+doit -f classic_spl_ltv/dodo/dodo_retention.py list --status
+
+
+./doit.sh prod 20260805 'classic_spl_ltv/dodo/dodo_retention.py' score_other_short_term
+
+
+export ENV_FOR_DYNACONF=prod
+export DYNACONF_GIT_CHECKOUT=feature/B-2937395
+export DYNACONF_GIT_BRANCH=feature/B-2937395
+export END_DATE=20260805
