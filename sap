@@ -1,0 +1,6 @@
+from sklearn.metrics import log_loss
+
+print(f"Base rate: {y_true.mean():.4f}")
+print(f"Log loss:  {log_loss(y_true, y_score):.4f}")
+
+log_loss(y_true, np.column_stack((1 - y_score, y_score)))
