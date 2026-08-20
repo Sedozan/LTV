@@ -1,0 +1,9 @@
+# from process_raw_expense, replicate the agt lifetime-new numerator:
+raw = read_raw_expenses()
+agt = add_ea_ia(raw)
+comps = ["state_premium_tax","write_offs","assessments","pay_fees","misc_income_exp","other_lifetime"]
+numer = sum(agt[f"{c}_agt_new"].iloc[0] for c in comps)
+denom = agt["earned_prem_agt_new"].iloc[0]
+print("pipeline lifetime numer:", numer, "denom:", denom, "ratio:", numer/denom)
+for c in comps:
+    print(c, agt[f"{c}_agt_new"].iloc[0])
