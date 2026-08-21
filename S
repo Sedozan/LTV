@@ -1,14 +1,21 @@
-# in a fresh kernel — env vars first per your dynaconf trap
-import pandas as pd
+# fresh kernel, env vars set first (dynaconf)
 from classic_spl_ltv.jobs.expense import process_raw_expense as pre
 
-# call whatever function reads the raw sheet into the pre-melt frame.
-# from your grep, the melt happens ~line 170; the read is earlier in the same module.
-# find the read fn name in lines 1-173, then:
-raw = pre.<read_fn>()          # the frame BEFORE fill_na/fillna(0)
-lc = raw.filter(like="lifetime")
-print(lc.isna().sum())         # per-column NaN counts, new vs renew
-print(lc.shape, lc.columns.tolist())
+raw = pre.read_raw_expenses()
+agcy = pre.add_ea_ia(raw)
+
+ch, typ = "agt", "renew"
+comps = ["state_premium_tax","write_offs","assessments","pay_fees","misc_income_exp","other_lifetime"]
+for c in comps:
+    col = f"{c}_{ch}_{typ}"
+    print(col, "->", agcy[col].iloc[0] if col in agcy.columns else "MISSING")
+
+denom_col = f"earned_prem_{ch}_{typ}"
+print(denom_col, "->", agcy[denom_col].iloc[0])
+
+numer = sum(agcy[f"{c}_{ch}_{typ}"].iloc[0] for c in comps if f"{c}_{ch}_{typ}" in agcy.columns)
+print("numer =", numer, " denom =", agcy[denom_col].iloc[0], " ratio =", numer/agcy[denom_col].iloc[0])
+
 
 
 import pandas as pd
