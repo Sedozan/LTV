@@ -1,3 +1,20 @@
+ch, typ = "ccc", "new"
+comps = ["state_premium_tax","write_offs","assessments","pay_fees","misc_income_exp","other_lifetime"]
+src = raw   # ccc pulls from expense_input/raw, NOT agcy
+for c in comps:
+    col = f"{c}_{ch}_{typ}"
+    print(col, "->", src[col].iloc[0] if col in src.columns else "MISSING")
+denom_col = f"earned_prem_{ch}_{typ}"
+print(denom_col, "->", src[denom_col].iloc[0] if denom_col in src.columns else "MISSING")
+numer = sum(src[f"{c}_{ch}_{typ}"].iloc[0] for c in comps if f"{c}_{ch}_{typ}" in src.columns)
+print("ratio =", numer/src[denom_col].iloc[0])
+
+
+
+
+
+
+
 # fresh kernel, env vars set first (dynaconf)
 from classic_spl_ltv.jobs.expense import process_raw_expense as pre
 
