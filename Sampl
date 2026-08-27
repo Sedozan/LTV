@@ -1,0 +1,5 @@
+lhs = df['ltv']
+rhs = (df['lifetime_premium'] - df['lifetime_loss'] - df['claims_exp']
+       - df['acquisition_exp'] - df['lifetime_exp']
+       - df['cost_of_capital'] - df['tax'] + df['investment_income'])  # ± balance, ± cat per your formula
+(lhs - rhs).abs().max()
