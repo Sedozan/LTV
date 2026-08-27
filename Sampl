@@ -1,3 +1,8 @@
-print('ply_policy_id' in df_prev.columns)      # True?
-print(df_prev.index.name, df_prev.index.names)  # is it the index?
-print([c for c in df_prev.columns if 'policy_id' in c])  # exact spelling / dupes
+def score_cols(prefix):
+    cols = [ ... ]  # the list as-is
+    return cols
+
+for tag, df, pfx in [("curr", df_curr, "e006scl"), ("prev", df_prev, "e005scl")]:
+    want = score_cols(pfx)
+    missing = [c for c in want if c not in df.columns]
+    print(f"{tag}: {len(missing)} missing ->", missing)
