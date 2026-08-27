@@ -1,13 +1,10 @@
-LINE = 'Personal Umbrella'
-line_col = 'drv_line'   # confirmed from your output above
+def find_line_col(df):
+    for c in df.columns:
+        if df[c].dtype == object and LINE in set(df[c].dropna().astype(str)):
+            return c
+    return None
 
-# v9.4 population
-n_cur = (combined_df[line_col] == LINE).sum()
+avg_line_col = find_line_col(line_compare_averages)
+row = line_compare_averages.loc[line_compare_averages[avg_line_col] == LINE].iloc[0]
 
-# v9_1_2 population — need the frame the _v9_1_2 columns came from.
-# If combined_df is an inner join, both sides share rows and counts are equal by construction —
-# which would mean the drop is real, not population. Check whether v9_1_2 premium is non-null per row:
-n_prev_nonnull = combined_df.loc[combined_df[line_col]==LINE, 'lifetime_premium_v9_1_2'].notna().sum()
-
-print(f"v9.4 umbrella policies:        {n_cur:,}")
-print(f"v9_1_2 non-null on same rows:  {n_prev_nonnull:,}")
+print(f"line col (avg frame): {avg_line_col}")
