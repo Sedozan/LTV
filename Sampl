@@ -1,5 +1,18 @@
-lhs = df['ltv']
-rhs = (df['lifetime_premium'] - df['lifetime_loss'] - df['claims_exp']
-       - df['acquisition_exp'] - df['lifetime_exp']
-       - df['cost_of_capital'] - df['tax'] + df['investment_income'])  # ± balance, ± cat per your formula
-(lhs - rhs).abs().max()
+import numpy as np
+
+base = (combined_df['lifetime_premium'] - combined_df['lifetime_loss'] - combined_df['claims_exp']
+        - combined_df['acquisition_exp'] - combined_df['lifetime_exp']
+        - combined_df['cost_of_capital'] - combined_df['tax'] + combined_df['investment_income'])
+
+resid = combined_df['ltv'] - base
+
+candidates = ['balance_amt', 'cat_loss_amt', 'commission_exp_new',
+              'commission_exp_renew', 'investment_income']
+X = combined_df[candidates].values
+b, *_ = np.linalg.lstsq(X, resid.values, rcond=None)
+
+for name, coef in zip(candidates, b):
+    print(f"{name:24s} {coef:+.4f}")
+
+fitted = X @ b
+print("\nmax abs resid after fit:", np.abs(resid.values - fitted).max())
