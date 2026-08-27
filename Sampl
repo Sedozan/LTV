@@ -1,15 +1,3 @@
-sub = combined_df[combined_df[line_col] == LINE]
-
-# both sides populated on the same row?
-both = sub['lifetime_premium'].notna() & sub['lifetime_premium_v9_1_2'].notna()
-print(f"rows with BOTH premiums non-null: {both.sum():,} of {len(sub):,}")
-
-# one row per policy? (no join fan-out)
-print(f"unique policy ids: {sub['ply_policy_id'].nunique():,}")
-print(f"rows:              {len(sub):,}")   # must equal nunique for 'same policies' to hold
-
-
-
-n_cur = (combined_df[line_col] == LINE).sum()                    # 180,365
-n_prev_nonnull = combined_df.loc[combined_df[line_col]==LINE,
-                                 'lifetime_premium_v9_1_2'].notna().sum()   # 180,342
+print('ply_policy_id' in df_prev.columns)      # True?
+print(df_prev.index.name, df_prev.index.names)  # is it the index?
+print([c for c in df_prev.columns if 'policy_id' in c])  # exact spelling / dupes
