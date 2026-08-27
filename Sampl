@@ -1,29 +1,8 @@
-import numpy as np
-
-base = (combined_df['lifetime_premium'] - combined_df['lifetime_loss'] - combined_df['claims_exp']
-        - combined_df['acquisition_exp'] - combined_df['lifetime_exp']
-        - combined_df['cost_of_capital'] - combined_df['tax'] + combined_df['investment_income'])
-
-resid = combined_df['ltv'] - base
-
-candidates = ['balance_amt', 'cat_loss_amt', 'commission_exp_new',
-              'commission_exp_renew', 'investment_income']
-
-# 1. show where the NaNs are — this is diagnostic on its own
-cols = candidates + ['ltv', 'lifetime_premium', 'lifetime_loss', 'claims_exp',
-                     'acquisition_exp', 'lifetime_exp', 'cost_of_capital', 'tax']
-print(combined_df[cols].isna().sum())
-
-# 2. fit on complete rows only
-mask = np.isfinite(resid.values) & np.isfinite(combined_df[candidates].values).all(axis=1)
-print(f"\nusing {mask.sum()} of {len(mask)} rows")
-
-X = combined_df.loc[mask, candidates].values
-y = resid.values[mask]
-b, *_ = np.linalg.lstsq(X, y, rcond=None)
-
-for name, coef in zip(candidates, b):
-    print(f"{name:24s} {coef:+.4f}")
-
-print("\nmax abs resid after fit:", np.abs(y - X @ b).max())
-
+tot = combined_df.sum(numeric_only=True)
+rhs = (tot['lifetime_premium'] - tot['lifetime_loss'] - tot['claims_exp']
+       - tot['acquisition_exp'] - tot['lifetime_exp']
+       - tot['cost_of_capital'] - tot['tax'] + tot['investment_income'])
+print("ltv total:", tot['ltv'])
+print("rhs total:", rhs)
+print("gap:", tot['ltv'] - rhs)
+print("gap vs commission:", tot['commission_exp_new'] + tot['commission_exp_renew'])
