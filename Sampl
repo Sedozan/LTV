@@ -1,10 +1,15 @@
-def find_line_col(df):
-    for c in df.columns:
-        if df[c].dtype == object and LINE in set(df[c].dropna().astype(str)):
-            return c
-    return None
+sub = combined_df[combined_df[line_col] == LINE]
 
-avg_line_col = find_line_col(line_compare_averages)
-row = line_compare_averages.loc[line_compare_averages[avg_line_col] == LINE].iloc[0]
+# both sides populated on the same row?
+both = sub['lifetime_premium'].notna() & sub['lifetime_premium_v9_1_2'].notna()
+print(f"rows with BOTH premiums non-null: {both.sum():,} of {len(sub):,}")
 
-print(f"line col (avg frame): {avg_line_col}")
+# one row per policy? (no join fan-out)
+print(f"unique policy ids: {sub['ply_policy_id'].nunique():,}")
+print(f"rows:              {len(sub):,}")   # must equal nunique for 'same policies' to hold
+
+
+
+n_cur = (combined_df[line_col] == LINE).sum()                    # 180,365
+n_prev_nonnull = combined_df.loc[combined_df[line_col]==LINE,
+                                 'lifetime_premium_v9_1_2'].notna().sum()   # 180,342
