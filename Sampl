@@ -1,86 +1,13 @@
-# commission check
-
-row = overall_compare_averages.iloc[0]  # same df the overall waterfall uses
-comm_v94 = row['commission_exp_new'] + row['commission_exp_renew']
-print("unexplained:", 305.36)
-print("v9.4 commission (new+renew):", comm_v94)
-print("ratio:", 305.36 / comm_v94)
-
-
-# rebuild acq/lifetime diffs with v9.4 commission folded back in
-combined_df['acq_incl_comm_v94']  = combined_df['acquisition_exp'] + combined_df['commission_exp_new']
-combined_df['life_incl_comm_v94'] = combined_df['lifetime_exp']    + combined_df['commission_exp_renew']
-# then recompute *_diff against the (already commission-inclusive) v9_1_2 acq/lifetime
-
-
-#88 issue
-
-import numpy as np
-
 LINE = 'Personal Umbrella'
+line_col = 'drv_line'   # confirmed from your output above
 
-# --- locate the line column in each frame (names may differ across frames) ---
-def find_line_col(df):
-    for c in df.columns:
-        if df[c].dtype == object and LINE in set(df[c].dropna().astype(str)):
-            return c
-    return None
+# v9.4 population
+n_cur = (combined_df[line_col] == LINE).sum()
 
-avg_line_col = find_line_col(line_compare_averages)
-row = line_compare_averages.loc[line_compare_averages[avg_line_col] == LINE].iloc[0]
+# v9_1_2 population — need the frame the _v9_1_2 columns came from.
+# If combined_df is an inner join, both sides share rows and counts are equal by construction —
+# which would mean the drop is real, not population. Check whether v9_1_2 premium is non-null per row:
+n_prev_nonnull = combined_df.loc[combined_df[line_col]==LINE, 'lifetime_premium_v9_1_2'].notna().sum()
 
-print(f"line col (avg frame): {avg_line_col}")
-print("="*60)
-
-# --- CHECK 1: population counts on each side ---
-count_cols = [c for c in row.index if 'count' in c.lower()]
-print("COUNT COLUMNS FOUND:", count_cols)
-for c in count_cols:
-    print(f"  {c:40s} {row[c]}")
-
-cur_cnt = ren_cnt = None
-for c in count_cols:
-    if 'v9_1_2' in c or 'prev' in c.lower(): ren_cnt = row[c]
-    else: cur_cnt = row[c]
-print("="*60)
-
-# --- CHECK 2: raw premium, each side (not the diff) ---
-prem_cur  = row.get('lifetime_premium', np.nan)
-prem_prev = row.get('lifetime_premium_v9_1_2', np.nan)
-print(f"lifetime_premium (v9.4):   {prem_cur:,.2f}")
-print(f"lifetime_premium (v9_1_2): {prem_prev:,.2f}")
-print(f"diff (prev - cur):         {prem_prev - prem_cur:,.2f}")
-print(f"pct change:                {(prem_cur/prem_prev - 1)*100:,.1f}%" if prem_prev else "n/a")
-print("="*60)
-
-# --- CHECK 3: single-outlier test on the per-policy frame ---
-pp_line_col = find_line_col(combined_df)
-sub = combined_df.loc[combined_df[pp_line_col] == LINE, 'lifetime_premium'].dropna()
-print(f"line col (per-policy): {pp_line_col}")
-print(f"n policies (v9.4 per-policy frame): {len(sub):,}")
-print(f"  mean {sub.mean():,.2f} | median {sub.median():,.2f} | max {sub.max():,.2f}")
-print(f"  p99  {sub.quantile(.99):,.2f} | p999 {sub.quantile(.999):,.2f}")
-top = sub.sort_values(ascending=False).head(5)
-print("  top 5 premiums:", [f"{v:,.0f}" for v in top])
-# how much does the top 1 policy move the mean?
-mean_ex_top = sub.sort_values(ascending=False).iloc[1:].mean()
-print(f"  mean excluding top policy: {mean_ex_top:,.2f}  (shift: {sub.mean()-mean_ex_top:,.2f})")
-print("="*60)
-
-# --- VERDICT ---
-print("VERDICT")
-if cur_cnt is not None and ren_cnt is not None:
-    ratio = cur_cnt / ren_cnt if ren_cnt else np.nan
-    print(f"  count ratio cur/prev = {ratio:.3f}", end="  ")
-    if not (0.9 < ratio < 1.1):
-        print("--> POPULATION MISMATCH: premium diff is likely a population artifact, not a real move.")
-    else:
-        print("--> counts align; population is not the cause.")
-else:
-    print("  could not find both count columns — inspect COUNT COLUMNS list above manually.")
-
-mean_shift_pct = (sub.mean() - mean_ex_top) / sub.mean() * 100 if sub.mean() else 0
-if abs(mean_shift_pct) > 10:
-    print(f"  single top policy moves the mean {mean_shift_pct:.1f}% --> OUTLIER-DRIVEN.")
-else:
-    print(f"  top policy moves mean only {mean_shift_pct:.1f}% --> not a single-outlier artifact.")
+print(f"v9.4 umbrella policies:        {n_cur:,}")
+print(f"v9_1_2 non-null on same rows:  {n_prev_nonnull:,}")
