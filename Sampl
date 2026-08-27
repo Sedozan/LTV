@@ -8,11 +8,22 @@ resid = combined_df['ltv'] - base
 
 candidates = ['balance_amt', 'cat_loss_amt', 'commission_exp_new',
               'commission_exp_renew', 'investment_income']
-X = combined_df[candidates].values
-b, *_ = np.linalg.lstsq(X, resid.values, rcond=None)
+
+# 1. show where the NaNs are — this is diagnostic on its own
+cols = candidates + ['ltv', 'lifetime_premium', 'lifetime_loss', 'claims_exp',
+                     'acquisition_exp', 'lifetime_exp', 'cost_of_capital', 'tax']
+print(combined_df[cols].isna().sum())
+
+# 2. fit on complete rows only
+mask = np.isfinite(resid.values) & np.isfinite(combined_df[candidates].values).all(axis=1)
+print(f"\nusing {mask.sum()} of {len(mask)} rows")
+
+X = combined_df.loc[mask, candidates].values
+y = resid.values[mask]
+b, *_ = np.linalg.lstsq(X, y, rcond=None)
 
 for name, coef in zip(candidates, b):
     print(f"{name:24s} {coef:+.4f}")
 
-fitted = X @ b
-print("\nmax abs resid after fit:", np.abs(resid.values - fitted).max())
+print("\nmax abs resid after fit:", np.abs(y - X @ b).max())
+
