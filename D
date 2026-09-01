@@ -1,8 +1,11 @@
-comps = ["lifetime_premium","lifetime_loss","balance_amt","cat_loss_amt","claims_exp",
-         "lifetime_exp","commission_exp_renew","commission_exp_new","cost_of_capital_20pct",
-         "acquisition_exp","tax","investment_income"]
-for c in comps:
-    lvl = row[c] - row[c + "_v1_2"]          # true level difference
-    dif = row.get(c + "_diff", np.nan)        # what the diff column stored
-    if abs(lvl - dif) > 1e-6:
-        print(f"{c:28s} level_diff={lvl:12.6f}  _diff={dif:12.6f}  Δ={lvl-dif:12.6f}")
+# does the AAC dict's signed sum of _diffs equal the true change?
+aac_dict_signs = {   # transcribe from your AAC components dict, name->sign
+    "lifetime_premium":-1,"lifetime_loss":1,"balance_amt":1,"cat_loss_amt":1,
+    "claims_exp":1,"lifetime_exp":1,"commission_exp_renew":1,"cost_of_capital_20pct":1,
+    "tax":1,"investment_income":-1,"commission_exp_new":1,"acquisition_exp":1,
+}
+waterfall_sum = sum(sign*row[c+"_diff"] for c,sign in aac_dict_signs.items())
+true_change   = row["aac_mkt"] - row["aac_mkt_v1_2"]
+print("waterfall Σ:", waterfall_sum)
+print("true change:", true_change)
+print("residual:   ", true_change - waterfall_sum)   # should ≈ -0.38
