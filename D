@@ -1,11 +1,8 @@
-import numpy as np
-# reconstruct each version's aac_mkt from ITS OWN component columns
-def recon(sfx):  # sfx = "" for v1.5 cols, "_v1_2" for v1.2, adjust to your names
-    g = lambda c: row.get(c + sfx, np.nan)   # NaN, not 0 — a name miss must scream
-    return (g("lifetime_premium") - g("lifetime_loss") - g("balance_amt")
-            - g("cat_loss_amt") - g("claims_exp") - g("lifetime_exp")
-            - g("commission_exp_renew") - g("tax") + g("investment_income")
-            - g("cost_of_capital_20_pct") - g("acquisition_exp") - g("commission_exp_new"))
-
-print("v1.5 self-foot:", row["aac_mkt"]      - recon(""))
-print("v1.2 self-foot:", row["aac_mkt_v1_2"] - recon("_v1_2"))
+comps = ["lifetime_premium","lifetime_loss","balance_amt","cat_loss_amt","claims_exp",
+         "lifetime_exp","commission_exp_renew","commission_exp_new","cost_of_capital_20pct",
+         "acquisition_exp","tax","investment_income"]
+for c in comps:
+    lvl = row[c] - row[c + "_v1_2"]          # true level difference
+    dif = row.get(c + "_diff", np.nan)        # what the diff column stored
+    if abs(lvl - dif) > 1e-6:
+        print(f"{c:28s} level_diff={lvl:12.6f}  _diff={dif:12.6f}  Δ={lvl-dif:12.6f}")
