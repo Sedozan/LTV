@@ -1,5 +1,11 @@
-print("cac_x_mkt level_diff:", row["cac_x_mkt"] - row["cac_x_mkt_v1_2"])
-print("aac_mkt  level_diff:", row["aac_mkt"]   - row["aac_mkt_v1_2"])
-print("gap:", (row["aac_mkt"] - row["aac_mkt_v1_2"]) - (row["cac_x_mkt"] - row["cac_x_mkt_v1_2"]))
-print("marketing term? check for a 'marketing'/'mkt_exp' style column in row.index")
-print([c for c in row.index if "mkt" in c or "market" in c])
+# use the ACTUAL aac components dict from the notebook (In[17]), not my transcription
+vals = {c: row.get(c, 0.0) for c in components.keys()}   # 0.0 fallback, exactly like make_waterfall
+missing = [c for c in components if c not in row.index]
+print("keys that silently hit the 0 fallback:", missing)
+
+names = list(components.keys())
+signs = [components[c][1] for c in names]
+bar_heights = [vals[names[0]]] + [vals[names[i]]*signs[i] for i in range(1,len(names)-1)] + [vals[names[-1]]]
+resid = bar_heights[-1] - bar_heights[0] - sum(bar_heights[1:-1])
+print("reproduced residual:", resid)   # expect ≈ -0.3799
+print("offending term value:", {c: row.get(c,0.0) for c in missing})
