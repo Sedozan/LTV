@@ -1,5 +1,0 @@
-pub = nsh.read_parquet_s3_to_pandas(p.public_results)
-print(pub[pub.channel=="agt"][["channel","expense_ratio_e006scl_lifetime_new"]])
-
-from classic_spl_ltv.jobs.validate.test_expense_ratios import FINANCE_RATIOS
-print("oracle:", FINANCE_RATIOS["agt"]["lifetime"][0])
