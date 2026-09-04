@@ -1,49 +1,5 @@
-wf_prefix = tuple(wf_cols)
-
-# overall, split by asc only
-asc_overall_averages = (
-    combined_df.groupby("asc")[
-        [c for c in combined_df.columns if c.startswith(wf_prefix)]
-    ].mean().reset_index()
-)
-
-# asc x channel
-asc_channel_averages = (
-    combined_df.groupby(["asc", "drv_chnl_of_bnd"])[
-        [c for c in combined_df.columns if c.startswith(wf_prefix)]
-    ].mean().reset_index()
-)
-
-
-def asc_label(v):
-    return "ASC" if v == 1 else "Classic"   # CONFIRM 1==ASC before shipping
-
-
-
-
-for asc_val in sorted(asc_overall_averages["asc"].unique()):
-    row = asc_overall_averages.loc[asc_overall_averages["asc"] == asc_val].iloc[0]
-    make_waterfall(df=row, components=ltv_components,
-                   title_input=f"Overall LTV — {asc_label(asc_val)}")
-
-for asc_val in sorted(asc_overall_averages["asc"].unique()):
-    row = asc_overall_averages.loc[asc_overall_averages["asc"] == asc_val].iloc[0]
-    make_waterfall(df=row, components=aac_components,
-                   title_input=f"Overall AAC — {asc_label(asc_val)}")
-
-for asc_val in sorted(asc_overall_averages["asc"].unique()):
-    row = asc_overall_averages.loc[asc_overall_averages["asc"] == asc_val].iloc[0]
-    make_waterfall(df=row, components=ple_components,
-                   title_input=f"Overall PLE — {asc_label(asc_val)}")
-
-
-
-
-for asc_val in sorted(asc_channel_averages["asc"].unique()):
-    for channel in asc_channel_averages["drv_chnl_of_bnd"].unique():
-        row = asc_channel_averages.loc[
-            (asc_channel_averages["asc"] == asc_val) &
-            (asc_channel_averages["drv_chnl_of_bnd"] == channel)
-        ].iloc[0]
-        make_waterfall(df=row, components=ltv_components,
-                       title_input=f"LTV — {asc_label(asc_val)} — {channel}")
+cd /mnt/code
+export ENV_FOR_DYNACONF=prod
+export DYNACONF_GIT_BRANCH=feature/B-2961391
+export DYNACONF_GIT_CHECKOUT=feature/B-2961391
+python /mnt/code/specialty_ltv/jobs/core/datalake_preprocess.py --end_date=20260901
