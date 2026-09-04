@@ -1,8 +1,0 @@
-
-
-Per our discussion, here are the steps I’m planning on taking to accomplish this story. Please let me know if you think otherwise.
-
-•  Add the two missing key columns to the renters df_mapped (policyVersionNbr and publicationUTC). They’re what the dedup filters group on, and renters doesn’t currently pull them.
-	•	Bring over the three dedup functions from home; max policy version, max publication UTC, final drop-duplicates. And run them right after transform_mapping_add_nulls is used.
-	•	Save a pre-dedup copy so we can compare row counts before and after.
-	•	Validate by row counts at each step to confirm that there is no duplicated policy and version rows.
