@@ -1,11 +1,49 @@
-# use the ACTUAL aac components dict from the notebook (In[17]), not my transcription
-vals = {c: row.get(c, 0.0) for c in components.keys()}   # 0.0 fallback, exactly like make_waterfall
-missing = [c for c in components if c not in row.index]
-print("keys that silently hit the 0 fallback:", missing)
+wf_prefix = tuple(wf_cols)
 
-names = list(components.keys())
-signs = [components[c][1] for c in names]
-bar_heights = [vals[names[0]]] + [vals[names[i]]*signs[i] for i in range(1,len(names)-1)] + [vals[names[-1]]]
-resid = bar_heights[-1] - bar_heights[0] - sum(bar_heights[1:-1])
-print("reproduced residual:", resid)   # expect ≈ -0.3799
-print("offending term value:", {c: row.get(c,0.0) for c in missing})
+# overall, split by asc only
+asc_overall_averages = (
+    combined_df.groupby("asc")[
+        [c for c in combined_df.columns if c.startswith(wf_prefix)]
+    ].mean().reset_index()
+)
+
+# asc x channel
+asc_channel_averages = (
+    combined_df.groupby(["asc", "drv_chnl_of_bnd"])[
+        [c for c in combined_df.columns if c.startswith(wf_prefix)]
+    ].mean().reset_index()
+)
+
+
+def asc_label(v):
+    return "ASC" if v == 1 else "Classic"   # CONFIRM 1==ASC before shipping
+
+
+
+
+for asc_val in sorted(asc_overall_averages["asc"].unique()):
+    row = asc_overall_averages.loc[asc_overall_averages["asc"] == asc_val].iloc[0]
+    make_waterfall(df=row, components=ltv_components,
+                   title_input=f"Overall LTV — {asc_label(asc_val)}")
+
+for asc_val in sorted(asc_overall_averages["asc"].unique()):
+    row = asc_overall_averages.loc[asc_overall_averages["asc"] == asc_val].iloc[0]
+    make_waterfall(df=row, components=aac_components,
+                   title_input=f"Overall AAC — {asc_label(asc_val)}")
+
+for asc_val in sorted(asc_overall_averages["asc"].unique()):
+    row = asc_overall_averages.loc[asc_overall_averages["asc"] == asc_val].iloc[0]
+    make_waterfall(df=row, components=ple_components,
+                   title_input=f"Overall PLE — {asc_label(asc_val)}")
+
+
+
+
+for asc_val in sorted(asc_channel_averages["asc"].unique()):
+    for channel in asc_channel_averages["drv_chnl_of_bnd"].unique():
+        row = asc_channel_averages.loc[
+            (asc_channel_averages["asc"] == asc_val) &
+            (asc_channel_averages["drv_chnl_of_bnd"] == channel)
+        ].iloc[0]
+        make_waterfall(df=row, components=ltv_components,
+                       title_input=f"LTV — {asc_label(asc_val)} — {channel}")
