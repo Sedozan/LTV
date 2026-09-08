@@ -1,0 +1,40 @@
+# === LTV Base Validation — dedup impact (B-2961391) ===
+
+new = ph.read_parquet_s3(spark, "tmx-smsiweb/specialty-ltv/prod/feature/B-2961391/core/ltv_base.parquet/")
+old = ph.read_parquet_s3(spark, "tmx-smsiweb/specialty-ltv/prod/release/NB_SPL_v1.5.0/core/ltv_base.parquet/")  # <-- confirm current release branch
+
+# --- schema check: confirm column names before trusting the rest ---
+new.printSchema()
+
+
+# 0) SANITY — did new read the deduped asc_pol? new ASC must be LOWER than old.
+#    If equal, ltv_base read a stale asc_pol and everything below is meaningless. STOP if so.
+print("new ASC:", new.filter("asc = 1").count(), " | old ASC:", old.filter("asc = 1").count())
+
+# 1) totals + asc split. PLUM (asc=0) unchanged; ASC (asc=1) dropped by dedup.
+print("old total:", old.count(), " | new total:", new.count())
+print("--- old ---"); old.groupBy("asc").count().show()
+print("--- new ---"); new.groupBy("asc").count().show()
+
+
+# 2) column diffs. Expect drv_termination_dt / drv_termination_rsn to appear as new.
+#    Confirm no home-only cols (asc_llh_ind, windhail, flat_cancel_ind) leaked in.
+print("in prod, not yours:", [v for v in old.columns if v not in new.columns])
+print("yours, not prod   :", [v for v in new.columns if v not in old.columns])
+
+
+# 3) dropped rows should be ASC-only, and the policy should still exist in new
+#    (i.e. dedup removed duplicate versions, not whole policies / not PLUM rows).
+in_old_not_new = (
+    old.select("ply_policy_id", "drv_endorse_dt", "drv_frst_eff_dt", "asc")
+    .join(
+        new.select("ply_policy_id", "drv_endorse_dt", "drv_frst_eff_dt"),
+        on=["ply_policy_id", "drv_endorse_dt", "drv_frst_eff_dt"],
+        how="left_anti",
+    )
+)
+in_old_not_new.groupBy("asc").count().show()
+
+
+
+new.groupBy("ply_policy_id", "drv_endorse_dt").count().filter("count > 1").count()  # want 0 for asc rows
