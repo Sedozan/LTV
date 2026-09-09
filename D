@@ -1,5 +1,0 @@
-cd /mnt/code
-export ENV_FOR_DYNACONF=prod
-export DYNACONF_GIT_BRANCH=feature/B-2961391
-export DYNACONF_GIT_CHECKOUT=feature/B-2961391
-python /mnt/code/specialty_ltv/jobs/core/datalake_preprocess.py --end_date=20260901
