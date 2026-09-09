@@ -1,0 +1,29 @@
+dups = (new.groupBy("ply_policy_id","drv_endorse_dt").count()
+        .filter("count > 1").limit(4))
+new.join(dups, ["ply_policy_id","drv_endorse_dt"]).orderBy("ply_policy_id").show(20, truncate=False)
+
+# post-term rows, are these endorsements genuinely after termination by a meaningful margin
+new.filter("drv_termination_dt is not null and drv_endorse_dt > drv_termination_dt") \
+   .select("ply_policy_nbr", "drv_frst_eff_dt", "drv_endorse_dt",
+           "drv_termination_dt", "drv_full_premium_amt", "policyVersionNbr") \
+   .orderBy("ply_policy_nbr", "drv_endorse_dt") \
+   .show(20, truncate=False)
+
+
+# before vs after the filter
+p0 = "<pick one policy from the list above>"
+new.filter(F.col("ply_policy_nbr") == p0) \
+   .withColumn("would_be_dropped",
+       (F.col("drv_termination_dt").isNotNull()) & (F.col("drv_endorse_dt") > F.col("drv_termination_dt"))) \
+   .orderBy("drv_endorse_dt").show(50, truncate=False)
+
+# policy terminated 2025-03, but here are 3 endorsements dated 2025-06/07/08 that survived — filter would remove those."
+
+
+
+grep -rn "ltv_base" /mnt/code/specialty_ltv/jobs/ltv_calc/
+grep -rn "ltv_base\|ModelScoreComponent" /mnt/code/specialty_ltv/jobs/ltv_calc/components/
+
+
+export END_DATE=20260901   # it uses nsh/env like ltv_base did; confirm
+python /mnt/code/specialty_ltv/jobs/ltv_calc/calculate_ltv.py --balanced
