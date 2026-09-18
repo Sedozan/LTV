@@ -1,18 +1,14 @@
+Completed
 
-from pyspark.sql import functions as F
+	•	Ran the release parties for Classic and Renters.
+	•	Retrained and evaluated the new condo retention model.
+	•	Created a PR and documented the performance.
+	•	Got reacquainted with Fabric and the monitoring pipeline/dashboard by refreshing it.
 
-new.filter(
-    F.col("drv_termination_dt").isNotNull() &
-    (F.col("drv_endorse_dt") > F.col("drv_termination_dt"))
-).select(
-    "ply_policy_nbr",
-    "drv_frst_eff_dt",
-    "drv_endorse_dt",
-    "drv_termination_dt",
-    F.datediff("drv_endorse_dt", "drv_termination_dt").alias("days_after_termination"),
-    "drv_full_premium_amt",
-    "policyVersionNbr"
-).orderBy(
-    "ply_policy_nbr",
-    "drv_endorse_dt"
-).show(20, truncate=False)
+Ongoing
+
+	•	None
+
+Not started
+
+	•	None
