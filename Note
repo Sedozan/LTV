@@ -1,0 +1,11 @@
+Page Subtitle =
+VAR x   = VALUE ( MAX ( 'month_tbl'[most_recent_scoring_month] ) )
+VAR mth = FORMAT ( DATE ( INT ( x / 100 ), MOD ( x, 100 ), 1 ), "mmm yyyy" )
+VAR p   = MAX ( 'hygiene_tbl'[model_path] )
+VAR s   = SEARCH ( "/v", p, 1, 0 )
+VAR ver = IF ( s > 0, MID ( p, s + 1, SEARCH ( "/", p, s + 1 ) - s - 1 ), "" )
+RETURN
+    "Renters new business retention  ·  " & ver
+        & "  ·  Latest scored month: " & mth
+
+
