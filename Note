@@ -1,8 +1,41 @@
-EVALUATE
-SELECTCOLUMNS (
-    TOPN ( 1, benchmark_on_baseline_and_scoring, benchmark_on_baseline_and_scoring[Metric], ASC ),
-    "Metric", benchmark_on_baseline_and_scoring[Metric],
-    "col2", benchmark_on_baseline_and_scoring[Training_data],
-    "col3", benchmark_on_baseline_and_scoring[Current_Month],
-    "col4", benchmark_on_baseline_and_scoring[%_Change]
-)
+Prediction PSI =
+CALCULATE ( MAX ( psi_df[PSI] ), psi_df[Column] = "model_prediction" )
+
+
+Refit Recommendation =
+VAR p = [Prediction PSI]
+RETURN SWITCH ( TRUE (),
+    ISBLANK ( p ), "No PSI available",
+    p < 0.1, "Not recommended",
+    p <= 0.25, "Monitor closely",
+    "Refit recommended" )
+
+
+Refit Detail =
+"Prediction PSI " & FORMAT ( [Prediction PSI], "0.000" ) & "  ·  threshold 0.10"
+
+
+Hygiene Status =
+IF ( SELECTEDVALUE ( hygiene_status_text[drift_detected] ) = FALSE(),
+     "Intact", "Investigate" )
+
+
+Sample Size Note =
+"Sample "
+& FORMAT ( CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Current_Month] ),
+                       benchmark_on_baseline_and_scoring[Metric] = "count" ), "#,0" )
+& "  ·  training "
+& FORMAT ( CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Training_data] ),
+                       benchmark_on_baseline_and_scoring[Metric] = "count" ), "#,0" )
+
+
+Delta Color =
+VAR m = SELECTEDVALUE ( benchmark_on_baseline_and_scoring[Metric] )
+VAR d = SELECTEDVALUE ( benchmark_on_baseline_and_scoring[%_Change] )
+VAR worse = SWITCH ( m, "logloss", d, "auc", -d, "precision", -d, "recall", -d, BLANK () )
+RETURN SWITCH ( TRUE (),
+    ISBLANK ( worse ), "#5F5E5A",
+    worse > 10, "#A32D2D",
+    worse > 5,  "#B7791F",
+    "#2E7D32" )
+
