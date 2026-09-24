@@ -9,3 +9,11 @@ RETURN
         & "  ·  Latest scored month: " & mth
 
 
+
+EVALUATE
+SELECTCOLUMNS (
+    hygiene_status_text,
+    "scoring_month", hygiene_status_text[most_recent_scoring_month],
+    "scoring_showed", hygiene_status_text[scoring_month_showed],
+    "path", hygiene_status_text[model_path]
+)
