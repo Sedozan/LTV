@@ -1,9 +1,8 @@
-Page Subtitle =
-VAR x   = VALUE ( MAX ( hygiene_status_text[most_recent_scoring_month] ) )
-VAR mth = FORMAT ( DATE ( INT ( x / 100 ), MOD ( x, 100 ), 1 ), "mmm yyyy" )
-VAR p   = MAX ( hygiene_status_text[model_path] )
-VAR s   = SEARCH ( "/v", p, 1, 0 )
-VAR ver = IF ( s > 0, MID ( p, s + 1, SEARCH ( "/", p, s + 1 ) - s - 1 ), "" )
-RETURN
-    "Renters new business retention  ·  " & ver
-        & "  ·  Latest scored month: " & mth
+EVALUATE
+SELECTCOLUMNS (
+    TOPN ( 1, benchmark_on_baseline_and_scoring, benchmark_on_baseline_and_scoring[Metric], ASC ),
+    "Metric", benchmark_on_baseline_and_scoring[Metric],
+    "col2", benchmark_on_baseline_and_scoring[Training_data],
+    "col3", benchmark_on_baseline_and_scoring[Current_Month],
+    "col4", benchmark_on_baseline_and_scoring[%_Change]
+)
