@@ -1,3 +1,10 @@
+■ Improved or stable    ■ 5–10% worse    ■ >10% worse    ■ Not a performance metric
+
+
+
+
+
+
 Sample Size Note =
 VAR cur = CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Current_Month] ),
                       benchmark_on_baseline_and_scoring[Metric] = "count" )
