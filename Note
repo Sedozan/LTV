@@ -1,114 +1,16 @@
-Max Drift =
-VAR p = SELECTCOLUMNS ( FILTER ( psi_df, NOT psi_df[Column] IN {"date_ym","release_day"} ), "v", psi_df[PSI] )
-VAR c = SELECTCOLUMNS ( FILTER ( csi_df, NOT csi_df[Column] IN {"date_ym","release_day"} ), "v", csi_df[CSI] )
-RETURN MAXX ( UNION ( p, c ), [v] )
-
-
-
-
-
-
-
-EVALUATE TOPN ( 5, psi_df, psi_df[PSI], DESC )
-EVALUATE TOPN ( 5, csi_df, csi_df[CSI], DESC )
-
-
-
-Current-month monitoring · ADW and RIPPLE from Jan 2024 · v1.5 · latest scored month Jul 2025
-All checks green as of Jul 2025 — model intact, no refit needed, drift stable.
-
-Model hygiene → Has the model file changed? Is accuracy holding?
-	•	Predicted vs actual → Are predictions tracking real defections?
-	•	CSI & PSI drift → Have the inputs shifted?
-	•	Prediction distribution → Has the score distribution moved?
-
-Max Drift =
-MAXX (
-    UNION (
-        SELECTCOLUMNS ( psi_df, "v", psi_df[PSI] ),
-        SELECTCOLUMNS ( csi_df, "v", csi_df[CSI] )
-    ), [v]
-)
-
-
-Overall Status =
-VAR x   = VALUE ( MAX ( hygiene_status_text[most_recent_scoring_month] ) )
-VAR mth = FORMAT ( DATE ( INT ( x / 100 ), MOD ( x, 100 ), 1 ), "mmm yyyy" )
-VAR ok  =
-    [Hygiene Status] = "Intact"
-        && [Refit Recommendation] = "Not recommended"
-        && [Max Drift] < 0.1
-RETURN
-    IF ( ok, "All checks green", "Attention needed" ) & " as of " & mth
-
-
-Overall Color =
-IF ( LEFT ( [Overall Status], 3 ) = "All", "#E1F5EE", "#FCEBEB" )
-
-EVALUATE ROW (
-    "status", [Overall Status],
-    "maxdrift", [Max Drift]
-)
-
-
-
-
-
-
-
-
-Sample Size Note =
-VAR cur = CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Current_Month] ),
-                      benchmark_on_baseline_and_scoring[Metric] = "count" )
-VAR trn = CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Training_data] ),
-                      benchmark_on_baseline_and_scoring[Metric] = "count" )
-VAR pct = DIVIDE ( cur - trn, trn )
-RETURN
-"Sample " & FORMAT ( cur, "#,0" )
-    & " vs " & FORMAT ( trn, "#,0" ) & " in training ("
-    & FORMAT ( pct, "+0.0%;-0.0%" ) & ")"
-
-
-
-
-Prediction PSI =
-CALCULATE ( MAX ( psi_df[PSI] ), psi_df[Column] = "model_prediction" )
-
-
-Refit Recommendation =
-VAR p = [Prediction PSI]
+Drift Color CSI =
+VAR v = SELECTEDVALUE ( csi_df[CSI] )
 RETURN SWITCH ( TRUE (),
-    ISBLANK ( p ), "No PSI available",
-    p < 0.1, "Not recommended",
-    p <= 0.25, "Monitor closely",
-    "Refit recommended" )
+    ISBLANK ( v ), "#5F5E5A",
+    v > 0.25, "#A32D2D",
+    v > 0.1,  "#B7791F",
+    "#1D6F42" )
 
 
-Refit Detail =
-"Prediction PSI " & FORMAT ( [Prediction PSI], "0.000" ) & "  ·  threshold 0.10"
-
-
-Hygiene Status =
-IF ( SELECTEDVALUE ( hygiene_status_text[drift_detected] ) = FALSE(),
-     "Intact", "Investigate" )
-
-
-Sample Size Note =
-"Sample "
-& FORMAT ( CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Current_Month] ),
-                       benchmark_on_baseline_and_scoring[Metric] = "count" ), "#,0" )
-& "  ·  training "
-& FORMAT ( CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Training_data] ),
-                       benchmark_on_baseline_and_scoring[Metric] = "count" ), "#,0" )
-
-
-Delta Color =
-VAR m = SELECTEDVALUE ( benchmark_on_baseline_and_scoring[Metric] )
-VAR d = SELECTEDVALUE ( benchmark_on_baseline_and_scoring[%_Change] )
-VAR worse = SWITCH ( m, "logloss", d, "auc", -d, "precision", -d, "recall", -d, BLANK () )
+Drift Color PSI =
+VAR v = SELECTEDVALUE ( psi_df[PSI] )
 RETURN SWITCH ( TRUE (),
-    ISBLANK ( worse ), "#5F5E5A",
-    worse > 10, "#A32D2D",
-    worse > 5,  "#B7791F",
-    "#2E7D32" )
-
+    ISBLANK ( v ), "#5F5E5A",
+    v > 0.25, "#A32D2D",
+    v > 0.1,  "#B7791F",
+    "#1D6F42" )
