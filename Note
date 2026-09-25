@@ -1,4 +1,40 @@
-■ Improved or stable    ■ 5–10% worse    ■ >10% worse    ■ Not a performance metric
+Current-month monitoring · ADW and RIPPLE from Jan 2024 · v1.5 · latest scored month Jul 2025
+All checks green as of Jul 2025 — model intact, no refit needed, drift stable.
+
+Model hygiene → Has the model file changed? Is accuracy holding?
+	•	Predicted vs actual → Are predictions tracking real defections?
+	•	CSI & PSI drift → Have the inputs shifted?
+	•	Prediction distribution → Has the score distribution moved?
+
+Max Drift =
+MAXX (
+    UNION (
+        SELECTCOLUMNS ( psi_df, "v", psi_df[PSI] ),
+        SELECTCOLUMNS ( csi_df, "v", csi_df[CSI] )
+    ), [v]
+)
+
+
+Overall Status =
+VAR x   = VALUE ( MAX ( hygiene_status_text[most_recent_scoring_month] ) )
+VAR mth = FORMAT ( DATE ( INT ( x / 100 ), MOD ( x, 100 ), 1 ), "mmm yyyy" )
+VAR ok  =
+    [Hygiene Status] = "Intact"
+        && [Refit Recommendation] = "Not recommended"
+        && [Max Drift] < 0.1
+RETURN
+    IF ( ok, "All checks green", "Attention needed" ) & " as of " & mth
+
+
+Overall Color =
+IF ( LEFT ( [Overall Status], 3 ) = "All", "#E1F5EE", "#FCEBEB" )
+
+EVALUATE ROW (
+    "status", [Overall Status],
+    "maxdrift", [Max Drift]
+)
+
+
 
 
 
