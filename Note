@@ -1,3 +1,8 @@
+EVALUATE TOPN ( 5, psi_df, psi_df[PSI], DESC )
+EVALUATE TOPN ( 5, csi_df, csi_df[CSI], DESC )
+
+
+
 Current-month monitoring · ADW and RIPPLE from Jan 2024 · v1.5 · latest scored month Jul 2025
 All checks green as of Jul 2025 — model intact, no refit needed, drift stable.
 
