@@ -1,3 +1,14 @@
+Max Drift =
+VAR p = SELECTCOLUMNS ( FILTER ( psi_df, NOT psi_df[Column] IN {"date_ym","release_day"} ), "v", psi_df[PSI] )
+VAR c = SELECTCOLUMNS ( FILTER ( csi_df, NOT csi_df[Column] IN {"date_ym","release_day"} ), "v", csi_df[CSI] )
+RETURN MAXX ( UNION ( p, c ), [v] )
+
+
+
+
+
+
+
 EVALUATE TOPN ( 5, psi_df, psi_df[PSI], DESC )
 EVALUATE TOPN ( 5, csi_df, csi_df[CSI], DESC )
 
