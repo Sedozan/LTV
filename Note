@@ -1,3 +1,17 @@
+Sample Size Note =
+VAR cur = CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Current_Month] ),
+                      benchmark_on_baseline_and_scoring[Metric] = "count" )
+VAR trn = CALCULATE ( MAX ( benchmark_on_baseline_and_scoring[Training_data] ),
+                      benchmark_on_baseline_and_scoring[Metric] = "count" )
+VAR pct = DIVIDE ( cur - trn, trn )
+RETURN
+"Sample " & FORMAT ( cur, "#,0" )
+    & " vs " & FORMAT ( trn, "#,0" ) & " in training ("
+    & FORMAT ( pct, "+0.0%;-0.0%" ) & ")"
+
+
+
+
 Prediction PSI =
 CALCULATE ( MAX ( psi_df[PSI] ), psi_df[Column] = "model_prediction" )
 
