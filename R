@@ -1,0 +1,20 @@
+Week of 9/22–9/25
+
+Completed
+
+	•	Diagnosed the systemic Domino prod job failures — traced them to Scality Key Vault auth breaking after the sys-Id change (not version-specific; cached creds masked it until 9/21). Ran a manual classic score_deliver to confirm the classic side was otherwise fine.
+	•	Fixed a Fabric job failure — notebook had no default lakehouse attached, so Delta paths resolved to the wrong OneLake location.
+	•	Ported the expense-ratio validation from the Domino pytest suite to a callable Spark function in Fabric (Delta read, updated Finance numbers) and walked Yinan through the conversion logic.
+	•	Continued Fabric onboarding — foundational knowledge and hands-on experience, including creating an environment from a repo.
+	•	Refactored the SPL monitoring dashboard in Power BI and implemented the requested changes — unified logic, PSI-driven refit verdict, consistent color-coding, and fixed the drift bug where date_ym/release_day were inflating CSI.
+
+Ongoing / blocked
+
+	•	Fabric → local VS Code setup for the coding agent. Still stuck: couldn't resolve the path issue manually (tried updating path.py, no luck), and after signing out of GitHub I couldn't log back in, so the agent never came up. Aiming to resolve over the weekend or Monday.
+	•	Classic monitoring dashboard — still to do (SPL done).
+
+Not started
+
+	•	None
+
+I pulled Classic out into Ongoing on its own line so the SPL win reads clearly without implying both are done. One open check still stands: if the expense-validation KeyError (service vs lifetime) isn't patched, the port doesn't run clean yet — so "working in the pipeline" isn't a claim to make until that's fixed.
